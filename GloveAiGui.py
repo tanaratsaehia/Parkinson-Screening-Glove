@@ -485,3 +485,6 @@ btn4 = Button(button_frame, text="Reset", font=30, command=reset)
 btn4.grid(row=1, column=1)
 
 root.mainloop()
+
+
+#pyinstaller GloveAiGui.py --onefile --windowed 
