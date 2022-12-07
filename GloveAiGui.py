@@ -4,14 +4,17 @@ from tkinter import ttk
 from datetime import datetime
 from csv import writer
 from sklearn import svm
+import requests
 import serial
 import pickle
 
+token = 'GVYOEFv4QXiAD65Z1gVbrnosIdqEIzZfdG4b62pe7AN'
+
 root = Tk()
 root.title("Parkinson screening glove")
-root.geometry("800x820+550+100")
+root.geometry("1000x820+550+100")
 
-my_text = Text(root, width=50, height=20, font=("arel", 18), borderwidth=5)
+my_text = Text(root, width=65, height=20, font=("arel", 18), borderwidth=5)
 my_text.pack(pady=20)
 
 global count_loop
@@ -35,9 +38,11 @@ def serial_port():
     right = str(choice_port_r.get())
     left = str(choice_port_l.get())
     if(hand == "Right"):
-        hand_port = str(right)
+        #hand_port = str(right)
+        return str(right)
     if(hand == "Left"):
         hand_port = str(left)
+        return str(left)
 
 def serial_port_write():
     global choice_hands_write
@@ -61,19 +66,22 @@ def startLoop():
     global count1
     if (count_loop == 0):
         global ser
-        ser = serial.Serial(hand_port, 115200)
+        
+        ser = serial.Serial(serial_port(), 115200)
     if(count1 >= 200):
         global running
-        print(running)
+        print(serial_port())
         if (running):
             global listX
             global my_text
             global timeNow
             global modeltrained
             global parCount
+            now = datetime.now()
+            timeNow = now.strftime("%d/%m/%Y %H:%M:%S")
+            print(running)
+            x = ser.readline()
             
-            timeNow = datetime.now()
-            x = ser.readline()
             #strX = x.encode("UTF-8")
             a = x.strip()
             b = str(a)
@@ -87,35 +95,51 @@ def startLoop():
             b = b.replace("b","")
             b = b.replace("'","")
             listX = b.split('_')
+            
             x1 = float(listX[0])
             y1 = float(listX[1])
             z1 = float(listX[2])
             x2 = float(listX[3])
             y2 = float(listX[4])
             z2 = float(listX[5])
+            
             realData = [x1, y1, z1, x2, y2, z2]
             answer = modeltrained.predict([realData])
+            
             answerStr = answer[0]
-            my_text.insert(END, timeNow.time())
+            my_text.insert(END, timeNow)
             my_text.insert(END, "  :  ")
             my_text.insert(END, listX)
             my_text.insert(END, "   ")
             my_text.insert(END, answerStr)
             my_text.insert(END, "\n")
             my_text.see(END)
+            
             if answer[0] == 'par':
                 global parCount
                 parCount += 1
-    if (count1 >= 540):
-        #global parCount
-        #global running
+    if (count1 >= 740):
         if(parCount >= 90):
+            a = ValueNoti.get()
+            if(ValueNoti.get() == 1):
+                DayNow = now.strftime("%d/%m/%Y")
+                TimeNow = now.strftime("%H:%M:%S")
+                State = "PerkinsonDetected!"
+                payload = {'message' : f'\nวันที่ {DayNow} เวลา {TimeNow}\nผลการตรวจคือ : {State}','notificationDisabled' : False}
+                requests.post('https://notify-api.line.me/api/notify', headers={'Authorization' : 'Bearer {}'.format(token)}, params = payload)
             my_text.insert(END, "\n")
             my_text.insert(END, "----------------->parkinson is detected")
             my_text.insert(END, "\n")
             my_text.see(END)
             del ser
         else:
+            a = ValueNoti.get()
+            if(ValueNoti.get() == 1):
+                DayNow = now.strftime("%d/%m/%Y")
+                TimeNow = now.strftime("%H:%M:%S")
+                State = "you are normal"
+                payload = {'message' : f'\nวันที่ {DayNow} เวลา {TimeNow}\nผลการตรวจคือ : {State}','notificationDisabled' : False}
+                requests.post('https://notify-api.line.me/api/notify', headers={'Authorization' : 'Bearer {}'.format(token)}, params = payload)
             my_text.insert(END, "\n")
             my_text.insert(END, "----------------->you are normal")
             my_text.insert(END, "\n")
@@ -153,16 +177,13 @@ def on_start():
 def clear():
     my_text.delete(1.0, END)
 
-def loadmodel():
-    global folderpath
-    global my_text
+def loadmodel():  
     global linearModel_r
     global polyModel_r
     global rbfModel_r
     global linearModel_l
     global polyModel_l
     global rbfModel_l
-    
     folderpath = str(askdirectory())
     print(folderpath)
     
@@ -291,14 +312,15 @@ def startloop_write():
     
     if (count_loop_write == 0):
         global ser
-        ser = serial.Serial(hand_port_write, 115200)
+        ser = serial.Serial(hand_port_write, 9600)
     if(count_loop_write >= 60):
         if (running_write):
             global listX
             global my_text_write
             global write_win
             global savepath
-            timeNow = datetime.now()
+            now = datetime.now()
+            timeNow = now.strftime("%d/%m/%Y %H:%M:%S")
             x = ser.readline()
             #strX = x.encode("UTF-8")
             a = x.strip()
@@ -312,7 +334,7 @@ def startloop_write():
             b = str(a)
             b = b.replace("b","")
             b = b.replace("'","")
-            listX = b.split('_')
+            listX = b.split('_') 
             x1 = float(listX[0])
             y1 = float(listX[1])
             z1 = float(listX[2])
@@ -358,9 +380,9 @@ def writewin():
     timeNow = datetime.now()
     write_win = Toplevel()
     write_win.title("Write data to csv file")
-    write_win.geometry("750x800")
+    write_win.geometry("900x800")
     
-    my_text_write = Text(write_win, width=60, height=20, font=("arel", 16), borderwidth=5)
+    my_text_write = Text(write_win, width=65, height=20, font=("arel", 16), borderwidth=5)
     my_text_write.pack(pady=20)
     
     label_frame = Frame(write_win)
@@ -443,6 +465,10 @@ combo_kernel = ttk.Combobox(label_frame, textvariable=choice_kernel)
 combo_kernel["values"] = ("Linear", "Poly", "RBF")
 combo_kernel.grid(row=1, column=3, padx=1)
 
+ValueNoti = IntVar()
+CheckBtnNoti = Checkbutton(label_frame, text="LineNotify", font=28, padx=15, variable=ValueNoti, onvalue=1, offvalue=0)
+CheckBtnNoti.grid(row=1, column=4, padx=1)
+
 button_frame = Frame(root)
 button_frame.pack()
 
@@ -459,6 +485,3 @@ btn4 = Button(button_frame, text="Reset", font=30, command=reset)
 btn4.grid(row=1, column=1)
 
 root.mainloop()
-
-
-#pyinstaller thirdLoop.py --onefile --windowed 
