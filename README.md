@@ -5,6 +5,3 @@ https://drive.google.com/drive/folders/1e_2GeGFmilXyWanMf2DIdZW8F312TBPy?usp=sha
 
 # Circuit diagram<br>
 ![GloveAiDiagram](https://user-images.githubusercontent.com/107335547/207733245-2fb61e4f-a550-4045-98cd-346b6cf7549b.png)
-
-# Circuit diagram<br>
-![GloveAiDiagram](https://user-images.githubusercontent.com/107335547/207733245-2fb61e4f-a550-4045-98cd-346b6cf7549b.png)
