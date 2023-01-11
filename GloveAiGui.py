@@ -12,9 +12,9 @@ token = 'GVYOEFv4QXiAD65Z1gVbrnosIdqEIzZfdG4b62pe7AN'
 
 root = Tk()
 root.title("Parkinson screening glove")
-root.geometry("1000x820+550+100")
+root.geometry("1200x820+550+100")
 
-my_text = Text(root, width=65, height=20, font=("arel", 18), borderwidth=5)
+my_text = Text(root, width=80, height=20, font=("arel", 18), borderwidth=5)
 my_text.pack(pady=20)
 
 global count_loop
@@ -29,57 +29,47 @@ count_loop = 0
 stop = 0
 ####serial-code############################
 def serial_port():
-    global choice_port_l
-    global choice_port_r
-    global choice_hands
-    global hand_port
     hand_port = ""
     hand = choice_hands.get()
     right = str(choice_port_r.get())
     left = str(choice_port_l.get())
     if(hand == "Right"):
-        #hand_port = str(right)
         return str(right)
     if(hand == "Left"):
-        hand_port = str(left)
         return str(left)
 
 def serial_port_write():
-    global choice_hands_write
-    global hand_port_write
-    global choice_port_l
-    global choice_port_r
-    hand_port_write = None
     hand = choice_hands_write.get()
     right = str(choice_port_r.get())
     left = str(choice_port_l.get())
     if(hand == "Right"):
-        hand_port_write = right
+        return right
     if(hand == "Left"):
-        hand_port_write = left
+        return left
+
 ####serial-code#############################
 def startLoop():
     global count_loop
     global listX
-    global hand_port
     global running
     global count1
+    global my_text
+    global timeNow
+    global modeltrained
+    global parCount
     if (count_loop == 0):
         global ser
-        
         ser = serial.Serial(serial_port(), 115200)
+        my_text.insert(END, "\n")
+        my_text.insert(END, "Please wait 1-2 second")
+        my_text.insert(END, "\n")
+        my_text.see(END)
     if(count1 >= 200):
         global running
         print(serial_port())
         if (running):
-            global listX
-            global my_text
-            global timeNow
-            global modeltrained
-            global parCount
             now = datetime.now()
             timeNow = now.strftime("%d/%m/%Y %H:%M:%S")
-            print(running)
             x = ser.readline()
             
             #strX = x.encode("UTF-8")
@@ -101,7 +91,10 @@ def startLoop():
             z1 = float(listX[2])
             x2 = float(listX[3])
             y2 = float(listX[4])
-            z2 = float(listX[5])
+            if listX[5] != "":
+                z2 = float(listX[5])
+            else:
+                z2 = 0
             
             realData = [x1, y1, z1, x2, y2, z2]
             answer = modeltrained.predict([realData])
@@ -118,8 +111,10 @@ def startLoop():
             if answer[0] == 'par':
                 global parCount
                 parCount += 1
-    if (count1 >= 740):
-        if(parCount >= 90):
+    if (count1 >= 900):
+        #global parCount
+        #global running
+        if(parCount >= 200):
             a = ValueNoti.get()
             if(ValueNoti.get() == 1):
                 DayNow = now.strftime("%d/%m/%Y")
@@ -128,8 +123,10 @@ def startLoop():
                 payload = {'message' : f'\nวันที่ {DayNow} เวลา {TimeNow}\nผลการตรวจคือ : {State}','notificationDisabled' : False}
                 requests.post('https://notify-api.line.me/api/notify', headers={'Authorization' : 'Bearer {}'.format(token)}, params = payload)
             my_text.insert(END, "\n")
-            my_text.insert(END, "----------------->parkinson is detected")
+            my_text.insert(END, "----------------->Parkinson is detected")
             my_text.insert(END, "\n")
+            #my_text.insert(END, parCount)
+            print(parCount)
             my_text.see(END)
             del ser
         else:
@@ -137,12 +134,14 @@ def startLoop():
             if(ValueNoti.get() == 1):
                 DayNow = now.strftime("%d/%m/%Y")
                 TimeNow = now.strftime("%H:%M:%S")
-                State = "you are normal"
+                State = "You are normal"
                 payload = {'message' : f'\nวันที่ {DayNow} เวลา {TimeNow}\nผลการตรวจคือ : {State}','notificationDisabled' : False}
                 requests.post('https://notify-api.line.me/api/notify', headers={'Authorization' : 'Bearer {}'.format(token)}, params = payload)
             my_text.insert(END, "\n")
-            my_text.insert(END, "----------------->you are normal")
+            my_text.insert(END, "----------------->You are normal")
             my_text.insert(END, "\n")
+            #my_text.insert(END, parCount)
+            print(parCount)
             my_text.see(END)
             del ser
         running = False
@@ -151,7 +150,7 @@ def startLoop():
     count1 += 1
     count_loop += 1
     print(count1)
-    root.after(10, startLoop)
+    root.after(5, startLoop)
 
 def on_stop():
     global running
@@ -178,6 +177,7 @@ def clear():
     my_text.delete(1.0, END)
 
 def loadmodel():  
+    global folderpath
     global linearModel_r
     global polyModel_r
     global rbfModel_r
@@ -254,18 +254,7 @@ def how_to_use():
     Label(how_to_use, text="Left : ", font=("arel", 10)).grid(row=2, padx=20, sticky=W)
     #Label(how_to_use, text=fileopen_l, font=("arel", 10)).grid(row=2, column=0, columnspan=3, padx=55, sticky=W)
     how_to_use.mainloop()
-def abuot_toolbar():
-    global fileopen_r
-    global fileopen_l
-    abuot_toolbar = Tk()
-    abuot_toolbar.title("Setting path file")
-    abuot_toolbar.geometry("300x250")
-    Label(window_setting, text="CSV path to train Ai", font=("arel", 14)).grid(row=0, columnspan=2, padx=10, pady=10, sticky=W)
-    Label(window_setting, text="Right : ", font=("arel", 10)).grid(row=1, padx=20, sticky=W)
-    Label(window_setting, text=fileopen_r, font=("arel", 10)).grid(row=1, column=0, columnspan=3, padx=63, sticky=W)
-    Label(window_setting, text="Left : ", font=("arel", 10)).grid(row=2, padx=20, sticky=W)
-    Label(window_setting, text=fileopen_l, font=("arel", 10)).grid(row=2, column=0, columnspan=3, padx=55, sticky=W)
-    abuot_toolbar.mainloop()
+
 ####Command################################################
 def new_window():
     pass
@@ -283,7 +272,6 @@ def start_write():
     running_write = True
     count_loop_write = 0
     start_count += 1
-    serial_port_write()
     startloop_write()
 
 def stop_write():
@@ -308,12 +296,11 @@ def startloop_write():
     global count_loop_write
     global hand
     global state
-    global hand_port_write
     
     if (count_loop_write == 0):
         global ser
-        ser = serial.Serial(hand_port_write, 9600)
-    if(count_loop_write >= 60):
+        ser = serial.Serial(serial_port_write(), 115200)
+    if(count_loop_write >= 150):
         if (running_write):
             global listX
             global my_text_write
@@ -354,7 +341,7 @@ def startloop_write():
                 writer_ojbect = writer(f_object)
                 writer_ojbect.writerow(gloveData)
                 f_object.close()
-            my_text_write.insert(END, timeNow.time())
+            my_text_write.insert(END, timeNow)
             my_text_write.insert(END, "  :  ")
             my_text_write.insert(END, listX)
             my_text_write.insert(END, "   ")
@@ -362,10 +349,12 @@ def startloop_write():
             my_text_write.insert(END, "   ")
             my_text_write.insert(END, state)
             my_text_write.insert(END, "\n")
+            if(count_loop_write >= 500):
+                running_write = False
     count_loop_write += 1
     print(count_loop_write)
     my_text_write.see(END)
-    write_win.after(12, startloop_write)
+    write_win.after(5, startloop_write)
 
 def writewin():
     global timeNow
@@ -380,7 +369,7 @@ def writewin():
     timeNow = datetime.now()
     write_win = Toplevel()
     write_win.title("Write data to csv file")
-    write_win.geometry("900x800")
+    write_win.geometry("980x800")
     
     my_text_write = Text(write_win, width=65, height=20, font=("arel", 16), borderwidth=5)
     my_text_write.pack(pady=20)
@@ -487,4 +476,4 @@ btn4.grid(row=1, column=1)
 root.mainloop()
 
 
-#pyinstaller GloveAiGui.py --onefile --windowed 
+#pyinstaller GloveAiGui.py --onefile --windowed
