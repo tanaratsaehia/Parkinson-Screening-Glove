@@ -1,5 +1,6 @@
 from tkinter import *
 from tkinter.filedialog import *
+import serial.tools.list_ports
 from tkinter import ttk
 from datetime import datetime
 from csv import writer
@@ -7,6 +8,7 @@ from sklearn import svm
 import requests
 import serial
 import pickle
+import threading
 
 token = 'GVYOEFv4QXiAD65Z1gVbrnosIdqEIzZfdG4b62pe7AN'
 
@@ -407,6 +409,18 @@ def reset():
     on_stop()
     on_stop()
 
+def updateSerialport():
+    
+    ports = serial.tools.list_ports.comports()
+    port_texts = ()
+    for port in ports:
+        port_texts = port_texts + (port.name,)
+    combo_r["values"] = port_texts
+    combo_l["values"] = port_texts
+    root.after(1000, updateSerialport)
+
+
+
 ####Command################################################
 menu_root = Menu()
 root.config(menu=menu_root)
@@ -433,13 +447,11 @@ Label(label_frame, text="Serial ports", font=("arel", 18)).grid(row=0, columnspa
 Label(label_frame, text="Right", font=("arel", 12)).grid(row=1, column=0, sticky=W)
 choice_port_r = StringVar(value="Chose port")
 combo_r = ttk.Combobox(label_frame, textvariable=choice_port_r, width=10)
-combo_r["values"] = ("COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9", "COM10", "COM11", "COM12", "COM13", "COM14", "COM15", "COM16", "COM17", "COM18", "COM19", "COM20")
 combo_r.grid(row=2, column=0 )
 
 Label(label_frame, text="Left", font=("arel", 12)).grid(row=1, column=1, sticky=W, padx=4)
 choice_port_l = StringVar(value="Chose port")
 combo_l = ttk.Combobox(label_frame, textvariable=choice_port_l, width=10)
-combo_l["values"] = ("COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9", "COM10", "COM11", "COM12", "COM13", "COM14", "COM15", "COM16", "COM17", "COM18", "COM19", "COM20")
 combo_l.grid(row=2, column=1, padx=5 )
 
 Label(label_frame, text="Hands", font=("arel", 18)).grid(row=0, column=2, padx=30, sticky=W)
@@ -473,6 +485,7 @@ btn3.grid(row=0, column=2)
 btn4 = Button(button_frame, text="Reset", font=30, command=reset)
 btn4.grid(row=1, column=1)
 
+root.after(1000, updateSerialport)
 root.mainloop()
 
 
