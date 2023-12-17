@@ -87,19 +87,7 @@ def startLoop():
             b = b.replace("b","")
             b = b.replace("'","")
             listX = b.split('_')
-            
-            x1 = float(listX[0])
-            y1 = float(listX[1])
-            z1 = float(listX[2])
-            x2 = float(listX[3])
-            y2 = float(listX[4])
-            if listX[5] != "":
-                z2 = float(listX[5])
-            else:
-                z2 = 0
-            
-            realData = [x1, y1, z1, x2, y2, z2]
-            answer = modeltrained.predict([realData])
+            answer = modeltrained.predict([listX])
             
             answerStr = answer[0]
             my_text.insert(END, timeNow)

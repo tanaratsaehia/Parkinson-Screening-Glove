@@ -43,7 +43,7 @@ void loop(){
       if(it != 5){
         Serial.print("_");
       }else {
-      Serial.println();
+        Serial.println();
       }
     }
   delay(5);
